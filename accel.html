@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accelerometer Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1a1a1a;
+            color: #fff;
+            text-align: center;
+        }
+        #permission-button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: 2px solid #00b7ff;
+            background-color: transparent;
+            color: #00b7ff;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        #permission-button:hover {
+            background-color: #00b7ff;
+            color: #1a1a1a;
+        }
+        #status {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            min-height: 2em;
+        }
+        #data-container {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.5rem;
+            line-height: 1.6;
+            background-color: #2b2b2b;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 300px;
+        }
+        .value {
+            font-weight: bold;
+            color: #a5ff90;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="permission-button">Request Sensor Access</button>
+    
+    <div id="status">Waiting for permission...</div>
+
+    <div id="data-container">
+        <div>Alpha (Compass): <span id="alpha-value" class="value">null</span></div>
+        <div>Beta (Front-Back): <span id="beta-value" class="value">null</span></div>
+        <div>Gamma (Left-Right): <span id="gamma-value" class="value">null</span></div>
+    </div>
+
+    <script>
+        const button = document.getElementById('permission-button');
+        const statusEl = document.getElementById('status');
+        
+        const alphaEl = document.getElementById('alpha-value');
+        const betaEl = document.getElementById('beta-value');
+        const gammaEl = document.getElementById('gamma-value');
+
+        // This function will be called when the device orientation changes.
+        function handleOrientation(event) {
+            // Update the text content with the sensor values, rounded to 2 decimal places.
+            alphaEl.textContent = event.alpha ? event.alpha.toFixed(2) : 'null';
+            betaEl.textContent = event.beta ? event.beta.toFixed(2) : 'null';
+            gammaEl.textContent = event.gamma ? event.gamma.toFixed(2) : 'null';
+        }
+
+        button.addEventListener('click', () => {
+            // Check if the necessary API is available (primarily for iOS 13+).
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // iOS requires a user gesture to request permission.
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            statusEl.textContent = 'Access Granted. Listening for events...';
+                            window.addEventListener('deviceorientation', handleOrientation);
+                        } else {
+                            statusEl.textContent = 'Access Denied. Please check browser settings.';
+                        }
+                    })
+                    .catch(error => {
+                        statusEl.textContent = `Error: ${error.message}`;
+                        console.error(error);
+                    });
+            } else {
+                // For Android and other devices that don't require explicit permission.
+                statusEl.textContent = 'API available. Listening for events...';
+                window.addEventListener('deviceorientation', handleOrientation);
+            }
+            // Hide the button after it's been clicked.
+            button.style.display = 'none';
+        });
+    </script>
+
+</body>
+</html>
